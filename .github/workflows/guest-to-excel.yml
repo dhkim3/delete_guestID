@@ -1,18 +1,21 @@
 name: Export Guest Users
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # 수동 실행 가능
+  # schedule:        # 자동 스케줄 예시
+  #   - cron: '0 9 * * *'  # 매일 오전 9시
 
 jobs:
   guest-export:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup PowerShell
-        uses: actions/setup-powershell@v2
+        uses: PowerShell/setup-powershell@v2
+        with:
+          pwsh-version: '7.3.6'
 
       - name: Export Guest Users to Excel
         shell: pwsh
@@ -21,8 +24,6 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
-          Install-Module ImportExcel -Force -Scope CurrentUser
-          Install-Module Microsoft.Graph -Force -Scope CurrentUser
           .\Get-GuestUsers.ps1
 
       - name: Commit Excel to repo
