@@ -83,7 +83,8 @@ $rows = $users | ForEach-Object {
   }
 }
 
-# 📤 엑셀로 저장
+# 엑셀로 저장
 $rows | Export-Excel -Path $OutXlsx -AutoSize -FreezeTopRow -BoldTopRow -WorksheetName 'GuestUsers'
 
 Write-Host "Export Completed: $OutXlsx"
+
