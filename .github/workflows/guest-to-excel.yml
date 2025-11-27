@@ -1,36 +1,29 @@
 name: Export Guest Users
 
 on:
-  workflow_dispatch:  # 수동 실행
-  # schedule:          # 자동 실행 예시
-  #   - cron: '0 9 * * *'  # 매일 오전 9시
+  workflow_dispatch:
 
 jobs:
-  guest-export:
+  export:
     runs-on: windows-latest
-
+    
     steps:
-      # 1️⃣ 코드 체크아웃
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-      # 2️⃣ PowerShell로 PS1 실행
-      - name: Export Guest Users to Excel
-        shell: pwsh
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        run: |
-          Install-Module -Name ImportExcel -Force -Scope CurrentUser
-          Install-Module -Name Microsoft.Graph -Force -Scope CurrentUser
-          Install-Module -Name Microsoft.Graph.Auth -Force -Scope CurrentUser
-          .\Get-GuestUsers.ps1
+    - name: Install PowerShell modules & Run Script
+      shell: pwsh
+      env:
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      run: |
+        pwsh -Command "Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted"
+        Install-Module -Name ImportExcel -Force -Scope CurrentUser
+        Install-Module -Name Microsoft.Graph -Force -Scope CurrentUser
+        .\Get-GuestUsers.ps1 -OutDir output
 
-      # 3️⃣ Excel 결과 GitHub에 커밋/푸시
-      - name: Commit Excel to repo
-        run: |
-          git config --local user.name "github-actions"
-          git config --local user.email "actions@github.com"
-          git add GuestUsers_*.xlsx
-          git commit -m "Update GuestUsers.xlsx" || echo "No changes"
-          git push
+    - name: Upload result
+      uses: actions/upload-artifact@v4
+      with:
+        name: guest-users-export
+        path: output/
