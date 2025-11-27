@@ -4,26 +4,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  export:
+  guest-export:
     runs-on: windows-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
+      # 1️코드 체크아웃
+      - uses: actions/checkout@v4
 
-    - name: Install PowerShell modules & Run Script
-      shell: pwsh
-      env:
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      run: |
-        pwsh -Command "Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted"
-        Install-Module -Name ImportExcel -Force -Scope CurrentUser
-        Install-Module -Name Microsoft.Graph -Force -Scope CurrentUser
-        .\Get-GuestUsers.ps1 -OutDir output
+      #  PS1 실행 (ImportExcel + Microsoft.Graph 설치 포함)
+      - name: Run PowerShell Script
+        shell: pwsh
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          pwsh -Command "Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted"
+          Install-Module -Name ImportExcel -Force -Scope CurrentUser
+          Install-Module -Name Microsoft.Graph -Force -Scope CurrentUser
+          .\Get-GuestUsers.ps1 -OutDir output
 
-    - name: Upload result
-      uses: actions/upload-artifact@v4
-      with:
-        name: guest-users-export
-        path: output/
+      # 결과 업로드 (Artifact)
+      - name: Upload Excel Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: guest-users-export
+          path: output/
