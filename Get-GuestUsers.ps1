@@ -13,10 +13,18 @@ if (-not (Test-Path $OutDir)) {
 Install-Module -Name ImportExcel -Force -Scope CurrentUser
 Install-Module -Name Microsoft.Graph -Force -Scope CurrentUser
 
-# Microsoft Graph 로그인 (App 인증)
-Connect-MgGraph -ClientId $env:AZURE_CLIENT_ID `
-                -TenantId $env:AZURE_TENANT_ID `
-                -ClientSecret $env:AZURE_CLIENT_SECRET
+# Microsoft.Identity.Client 필요 없음, Microsoft.Graph.Auth도 설치하지 마세요
+
+# ClientSecretCredential 객체 생성
+$ClientSecretCred = [Microsoft.Graph.Auth.ClientSecretCredential]::new(
+    $env:AZURE_TENANT_ID,
+    $env:AZURE_CLIENT_ID,
+    $env:AZURE_CLIENT_SECRET
+)
+
+# Graph 연결
+Connect-MgGraph -ClientSecretCredential $ClientSecretCred -Scopes "User.Read.All","AuditLog.Read.All"
+
 
 # 결과 파일명
 $ts = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -87,4 +95,5 @@ $rows = $users | ForEach-Object {
 $rows | Export-Excel -Path $OutXlsx -AutoSize -FreezeTopRow -BoldTopRow -WorksheetName 'GuestUsers'
 
 Write-Host "Export Completed: $OutXlsx"
+
 
