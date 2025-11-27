@@ -1,15 +1,19 @@
 name: Export Guest Users
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # 수동 실행
+  # schedule:          # 자동 실행 예시
+  #   - cron: '0 9 * * *'  # 매일 오전 9시
 
 jobs:
   guest-export:
     runs-on: windows-latest
 
     steps:
+      # 1️⃣ 코드 체크아웃
       - uses: actions/checkout@v3
 
+      # 2️⃣ PowerShell로 PS1 실행
       - name: Export Guest Users to Excel
         shell: pwsh
         env:
@@ -17,13 +21,12 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
-          # 모듈 설치
           Install-Module -Name ImportExcel -Force -Scope CurrentUser
           Install-Module -Name Microsoft.Graph -Force -Scope CurrentUser
-          
-          # PS1 스크립트 실행
+          Install-Module -Name Microsoft.Graph.Auth -Force -Scope CurrentUser
           .\Get-GuestUsers.ps1
 
+      # 3️⃣ Excel 결과 GitHub에 커밋/푸시
       - name: Commit Excel to repo
         run: |
           git config --local user.name "github-actions"
